@@ -20,9 +20,9 @@ PipControler旨在为了简化Python第三方库安装，它与传统Pip的区�
 
 ## 安装
 
-```
-# 安装工具链
 
+安装工具链
+```
 # 基于Debain的发行版
 sudo apt install git golang
 # 基于RHEL的发行版
@@ -30,12 +30,17 @@ sudo apt install git golang
 sudo yum install git golang
 # Fedora 22, RHEL 8及以上
 sudo dnf install git golang
+```
 
-# 克隆仓库
+克隆仓库
+```
 cd /home/
 git clone https://github.com/YufengGosling/PipControler.git
 cd PipControler
+```
 
+编译
+```
 # 自动脚本
 sudo bash install.sh
 
@@ -44,8 +49,11 @@ sudo bash install.sh
 go build -ldflags="-s -w"
 # 如果要debug
 go build
+```
 
-# 添加环境变量
+添加环境变量
+```
+# bash
 echo export PATH=$PATH:/home/PipControler/ > ./bashrc
 # 如果是zsh
 echo export PATH=$PATH:/home/PipControler/ > ./zshrc
@@ -56,10 +64,10 @@ echo export PATH=$PATH:/home/PipControler/ > ./zshrc
 | 命令 | 用处 |
 | --- | --- |
 | ipp | 扫描目录下的Python源码文件并自动安装依赖的第三方库 |
-| pipcontroler | 显示版本信息,帮助信息等 |
+| pipcontroler | 显示信息(-v版本，-h帮助等) |
 | 等待更多 | ... |
 
-## 下一步计算
+## 下一步打算
 - 增量扫描
 - 一键运行安装
 
