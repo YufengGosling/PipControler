@@ -12,11 +12,11 @@ PipControler旨在为了简化Python第三方库安装，它与传统Pip的区�
 | 安装时间 | 准备运行时 | 运行前 |
 | ... | ... | ... |
 
-作者:==Yufeng Gosling==
+作者:*Yufeng Gosling*
 
-语言:==Golang==
+语言:*Golang*
 
-开源许可证:==GPLv3==
+开源许可证:*GPLv3*
 
 ## 安装
 
