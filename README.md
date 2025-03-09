@@ -36,15 +36,19 @@ cd /home/
 git clone https://github.com/YufengGosling/PipControler.git
 cd PipControler
 
+# 自动脚本
+sudo bash install.sh
+
+# 如果要手动编译
 # 编译
 go build -ldflags="-s -w"
 # 如果要debug
 go build
 
 # 添加环境变量
-echo export PATH = '$PATH;/home/PipControler/" > ./bashrc
+echo export PATH=$PATH:/home/PipControler/ > ./bashrc
 # 如果是zsh
-echo export PATH = '$PATH;/home/PipControler/" > ./zshrc
+echo export PATH=$PATH:/home/PipControler/ > ./zshrc
 ```
 
 ## 使用
@@ -52,6 +56,7 @@ echo export PATH = '$PATH;/home/PipControler/" > ./zshrc
 | 命令 | 用处 |
 | --- | --- |
 | ipp | 扫描目录下的Python源码文件并自动安装依赖的第三方库 |
+| pipcontroler | 显示版本信息,帮助信息等 |
 | 等待更多 | ... |
 
 ## 下一步计算
