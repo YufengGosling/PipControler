@@ -15,6 +15,29 @@ import (
 负责人:Yufeng Gosling
 */
 
+/*
+                             _ooOoo_
+                            o8888888o
+                            88" . "88
+                            (| -_- |)
+                            O\  =  /O
+                         ____/`---'\____
+                       .'  \\|     |//  `.
+                      /  \\|||  :  |||//  \
+                     /  _||||| -:- |||||-  \
+                     |   | \\\  -  /// |   |
+                     | \_|  ''\---/''  |   |
+                     \  .-\__  `-`  ___/-. /
+                   ___`. .'  /--.--\  `. . __
+                ."" '<  `.___\_<|>_/___.'  >'"".
+               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+               \  \ `-.   \_ __\ /__ _/   .-` /  /
+          ======`-.____`-.___\_____/___.-`____.-'======
+                             `=---='
+                         
+                      如来保佑代码没有bug
+*/
+
 var wg sync.WaitGroup
 
 // 获取所有Py文件
@@ -37,8 +60,7 @@ func get_py_file(dir string) ([]string, error) {
 // 读取Py文件
 func read_file(input chan string, output chan string) error {
     defer wg.Done()
-    for len(input) > 0 {
-        file_name := <- input
+    for file_name := range input {
         file_data, err := os.ReadFile(file_name)
         if err != nil {
             fmt.Printf("Unable to read file %s. \nError: %v\n", file_name, err)
@@ -50,23 +72,18 @@ func read_file(input chan string, output chan string) error {
 }
 
 // 匹配代码的库
-func match_lib(file_data_ch chan string, output chan string, re *regexp.Regexp) {
+func match_lib(file_data_ch chan string, output chan []string, re *regexp.Regexp) {
     defer wg.Done()
-    file_data := ""
-    for len(file_data_ch) > 0 {
-        file_data = <-file_data_ch
-        for _, lib := range re.FindAllString(file_data, -1) {
-            output <- lib
-        }
+    for file_data := range file_data_ch {
+        output <- re.FindAllString(file_data, -1)
     }
 }
 
 // 安装库
 func install_lib(package_name_ch chan string) {
     defer wg.Done()
-    package_name := ""
-    for len(package_name_ch) > 0 {
-        package_name = <-package_name_ch
+    for package_name := range package_name_ch {
+        fmt.Printf("Installing %s\n", package_name)
         cmd := exec.Command("pip", "install", package_name)
         cmd.Run()
     }
@@ -84,10 +101,12 @@ func main() {
     if err != nil {
         return
     }
+
     path_ch := make(chan string, len(py_file_path))
     for _, py_file := range py_file_path {
         path_ch <- py_file
     }
+    close(path_ch)
     
     file_data := make(chan string, len(path_ch))
     for i := 0; i < num_goroutine; i += 1 {
@@ -95,23 +114,24 @@ func main() {
         go read_file(path_ch, file_data)
     }
     wg.Wait()
+    close(file_data)
 
     reg := `\b(?:import\s+(\w+)|from\s+(\w+)\s+import\b)`
     re := regexp.MustCompile(reg)
-    pack_ch := make(chan string, len(file_data))
-    pack_lis := []string{}
+    pack_slices_ch := make(chan []string, len(file_data))
     for i := 0; i < num_goroutine; i += 1 {
         wg.Add(1)
-        go match_lib(file_data, pack_ch, re)
+        go match_lib(file_data, pack_slices_ch, re)
     }
     wg.Wait()
-    close(pack_ch)
+    close(pack_slices_ch)
 
-    pack := ""
-    for len(pack_ch) > 0 {
-        pack = <- pack_ch 
-        if !slices.Contains(pack_lis, pack) {
-            pack_lis = append(pack_lis, pack)
+    pack_lis := []string{}
+    for pack_slices := range pack_slices_ch {
+        for _, pack := range pack_slices {
+            if !slices.Contains(pack_lis, pack) {
+                pack_lis = append(pack_lis, pack)
+            }
         }
     }
 
@@ -119,6 +139,7 @@ func main() {
     for _, pack := range pack_lis {
         install_pack <- pack
     }
+    close(install_pack)
 
     for i := 0; i < num_goroutine; i += 1 {
         wg.Add(1)
