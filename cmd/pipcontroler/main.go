@@ -19,9 +19,9 @@ func main() {
 			fmt.Printf("PipControler Version %s\n", version)
 		case "-h", "--help":
 			if len(args) > 2 {
-				help_message, found := command[args[2]]
+				helpMessage, found := command[args[2]]
 				if found {
-					fmt.Printf("%s: %s\n", args[2], help_message)
+					fmt.Printf("%s: %s\n", args[2], helpMessage)
 				} else {
 					fmt.Printf("%s Not Found\n", args[2])
 				}
