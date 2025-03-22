@@ -4,15 +4,17 @@ import (
     "fmt"
     "os"
     "path/filepath"
-    "regexp"
     "os/exec"
     "runtime"
     "sync"
     "slices"
+    "strings"
 )
 
 /*
-负责人:Yufeng Gosling
+负责人:Yufeng Gosling(项目创始人)
+创建时间:由于项目早期无记录，不详，只有大致的日期2025/2(我创建这个项目时只是个六年级小学生啊!)
+电子邮箱:yufeng_gosling_work@outlook.com
 */
 
 /*
@@ -35,7 +37,7 @@ import (
           ======`-.____`-.___\_____/___.-`____.-'======
                              `=---='
                          
-                      如来保佑代码没有bug
+               如来保佑代码没有bug(虽然我信道，不过应该是同吧？)
 */
 
 var wg sync.WaitGroup
@@ -57,27 +59,23 @@ func get_py_file(dir string) ([]string, error) {
     return py_file_lis, err
 }
 
-// 读取Py文件
-func read_file(input chan string, output chan string) error {
+// 读取并匹配Py文件里面的库，这里调用项目根目录scripts文件夹里面的match_lib.pl这个perl脚本
+func match_lib(input chan string, output chan []string) {
     defer wg.Done()
-    for file_name := range input {
-        file_data, err := os.ReadFile(file_name)
+    for py_file_path := range input {
+        cmd := exec.Command("perl", "scripts/match_lib.pl", py_file_path)
+        out, err := cmd.Output()
         if err != nil {
-            fmt.Printf("Unable to read file %s. \nError: %v\n", file_name, err)
-            return err
+            if exitError, ok := err.(*exec.ExitError); ok {
+                fmt.Printf("Error: %s", exitError.Stderr)
+            }
+            return
         }
-        output <- string(file_data)
+        lib := string(out)
+        output <- strings.Split(lib, "\n")
     }
-    return nil
 }
 
-// 匹配代码的库
-func match_lib(file_data_ch chan string, output chan []string, re *regexp.Regexp) {
-    defer wg.Done()
-    for file_data := range file_data_ch {
-        output <- re.FindAllString(file_data, -1)
-    }
-}
 
 // 安装库
 func install_lib(package_name_ch chan string) {
@@ -107,21 +105,11 @@ func main() {
         path_ch <- py_file
     }
     close(path_ch)
-    
-    file_data := make(chan string, len(path_ch))
-    for i := 0; i < num_goroutine; i += 1 {
-        wg.Add(1)
-        go read_file(path_ch, file_data)
-    }
-    wg.Wait()
-    close(file_data)
 
-    reg := `\b(?:import\s+(\w+)|from\s+(\w+)\s+import\b)`
-    re := regexp.MustCompile(reg)
-    pack_slices_ch := make(chan []string, len(file_data))
+    pack_slices_ch := make(chan []string, len(py_file_path))
     for i := 0; i < num_goroutine; i += 1 {
         wg.Add(1)
-        go match_lib(file_data, pack_slices_ch, re)
+        go match_lib(path_ch, pack_slices_ch)
     }
     wg.Wait()
     close(pack_slices_ch)
