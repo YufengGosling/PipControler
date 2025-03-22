@@ -1,6 +1,7 @@
 #!/bin/bash
 
-go build -ldflags="-s -w" ./cmd/ipp
-go build -ldflags="-s -w" ./cmd/pipcontroler
+go build -o bin/ -ldflags="-s -w" ./cmd/...
 
-echo export PATH=$PATH:/home/PipControler > /home/.bashrc
+cp -r scripts bin/scripts
+
+echo export PATH=$PATH:/home/PipControler/bin/ > /home/.bashrc

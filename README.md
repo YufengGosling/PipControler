@@ -18,18 +18,20 @@ PipControler旨在为了简化Python第三方库安装，它与传统Pip的区�
 
 开源许可证:*GPLv3*
 
+版本:*v0.2.0*
+
 ## 安装
 
 
 安装工具链
 ```
 # 基于Debain的发行版
-sudo apt install git golang
+sudo apt install git golang perl
 # 基于RHEL的发行版
 # Fedora 22, RHEL 8以下
-sudo yum install git golang
+sudo yum install git golang perl
 # Fedora 22, RHEL 8及以上
-sudo dnf install git golang
+sudo dnf install git golang perl
 ```
 
 克隆仓库
@@ -46,17 +48,22 @@ sudo bash install.sh
 
 # 如果要手动编译
 # 编译
-go build -ldflags="-s -w"
+go build -o bin/ -ldflags="-s -w" ./cmd/...
 # 如果要debug
-go build
+go build -o bin/ ./cmd/...
+```
+
+复制文件
+```
+cp -r scripts bin/scripts
 ```
 
 添加环境变量
 ```
 # bash
-echo export PATH=$PATH:/home/PipControler/ > ./bashrc
+echo export PATH=$PATH:/home/PipControler/bin/ > ./bashrc
 # 如果是zsh
-echo export PATH=$PATH:/home/PipControler/ > ./zshrc
+echo export PATH=$PATH:/home/PipControler/bin/ > ./zshrc
 ```
 
 ## 使用
@@ -76,5 +83,3 @@ echo export PATH=$PATH:/home/PipControler/ > ./zshrc
 
 # 许可证
 该项目使用GPLv3许可证，详细请看[LICENSE](http://github.com/YufengGosling/PipControler/LICENSE)
-
-使用PipControler,可以使开发过程无需关心安装依赖库的问题，能够更专注地编写代码，提高效率
