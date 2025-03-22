@@ -37,13 +37,14 @@ import (
           ======`-.____`-.___\_____/___.-`____.-'======
                              `=---='
                          
-               如来保佑代码没有bug(虽然我信道，不过应该是同吧？)
+         如来保佑代码没有bug(虽然我信道，不过应该是同吧？)
 */
 
 var wg sync.WaitGroup
 
 // 获取所有Py文件
 func get_py_file(dir string) ([]string, error) {
+    fmt.Println("Finding Python Files ...")
     py_file_lis := []string{}
     err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
         if len(path) > 3 && path[len(path) - 3:] == ".py" {
@@ -57,6 +58,7 @@ func get_py_file(dir string) ([]string, error) {
     }
 
     return py_file_lis, err
+    fmt.Println("Finded Python File.")
 }
 
 // 读取并匹配Py文件里面的库，这里调用项目根目录scripts文件夹里面的match_lib.pl这个perl脚本
@@ -84,6 +86,7 @@ func install_lib(package_name_ch chan string) {
         fmt.Printf("Installing %s\n", package_name)
         cmd := exec.Command("pip", "install", package_name)
         cmd.Run()
+        fmt.Printf("Installed %s Done.\n", package_name)
     }
 }
     
@@ -134,7 +137,6 @@ func main() {
         go install_lib(install_pack)
     }
     wg.Wait()
+
+    fmt.Println("OK")
 }
-
-
-
