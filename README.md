@@ -18,7 +18,7 @@ PipCtrler旨在为了简化Python第三方库安装，它与传统Pip的区别�
 
 开源许可证:*GPLv3*
 
-版本:*v0.2.0*
+版本:*v0.3.0*
 
 ## 安装
 
@@ -37,7 +37,7 @@ sudo dnf install git golang
 使用自动脚本或者克隆仓库编译安装
 下载自动脚本
 ```
-curl https://github.com/YufengGosling/PipCtrler/install.sh
+curl https://github.com/YufengGosling/PipCtrler/blob/snapshot/install.sh > install.sh
 sudo bash install.sh
 ```
 
@@ -80,4 +80,4 @@ echo export PATH=$PATH:/home/PipCtrler/bin/ > ./zshrc
 如果您感兴趣，可以为该项目贡献代码，不过请遵循GPLv3许可证
 
 # 许可证
-该项目使用GPLv3许可证，详细请看[LICENSE](http://github.com/YufengGosling/PipControler/LICENSE)
+该项目使用GPLv3许可证，详细请看[LICENSE](https://github.com/YufengGosling/PipCtrler/blob/main/LICENSE)

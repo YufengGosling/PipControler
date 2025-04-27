@@ -4,15 +4,14 @@ import (
 	"path/filepath"
 	"os"
 	"fmt"
-
-	"pipctrler/internal/errprocess"
+	"log"
 
 	"github.com/drgaph-io/badger/v3"
-	"github.com/dlclark/regexp2"
 )
 
-func GetAndSelectPyFile(fromDir string, db *badger.DB, pyFileLisOutput chan string, fileCountPtr *int) {
+func GetAndSelectPyFile(fromDir string, db *badger.DB, pyFileLisOutput chan string) {
 	defer db.Close()
+	defer pyFileLisOutput.Close()
     pyFileTableForGet := map[string]int{}
 	pyFileTableForDB := map[string]int{}
 
@@ -27,30 +26,34 @@ func GetAndSelectPyFile(fromDir string, db *badger.DB, pyFileLisOutput chan stri
                 pyFileTableForDB[filename] = unit64(fileTimeStamp)
 				return nil
 			})
-			ErrProcess("Cannnot get the file %s time stamp. \nError: %v", err, "error", []interface{fileName})
+			if err != nil {
+				log.Fatalf("Cannnot get the file %s time stamp. \nError: %v", fileName, err)
+		    }
 		}
 	})
-	ErrProcess("Get file table for database failed. \nError: %s", error, "error")
+	if err != nil {
+		log.Fatalf("Get file table for database failed. \nError: %s", err)
+	}
 
 	err = filepath.WalkDir(fromDir, func(path string, info os.FileInfo, err error) error {
 		if len(path) > 3 && path[len(path) - 3] == ".py" {
 			pyFileTableForGet[path] = info.ModTime().Unix()
 		}
 	})
-	ErrProcess("Cannot get the file. \nError: %v", err, "error")
+	if err != nil {
+		log.Fatalf("Cannot get the file. \nError: %v", err)
+	}
 
 	err = db.Update(func(txn *db.Txn) error{
 		for fileNameForGet, fileTimeStampForGet := range pyFileTableForGet {
 			fileTimeStampForDB, isFound := pyFileTableForDB[fileNameForGet]
 			if isFound {
             	if fileTimeStampForGet != fileTimeStampForDB {
-					*fileCountPtr++
 					pyFileLisOutput <- fileNameForGet
 					if err := txn.Set([]byte(fileNameForGet), []byte(fileTimeStampForGet)); err != nil {
 					return err
 				}
 			} else {
-				*fileCountPtr++
 				pyFileLisOutput <- fileNameForGet
 				if err := txn.Set([]byte(fileNameForGet), []byte(fileTimeStampForGet)); err != nil {
 					return err
@@ -66,25 +69,40 @@ func GetAndSelectPyFile(fromDir string, db *badger.DB, pyFileLisOutput chan stri
 			}
 		}
     })
-	ErrProcess("Database control error! \nError: %v", err, "error")
-
+	if err != {
+		log.Fatalf("Database control error! \nError: %v", err)
+	}
 	return pyFileLis
 }
 
+func GetPyFile(fromDir string, pyFileLisOutput) {
+	err := filepath.WalkDir(fromDir, func(path string, err error) error {
+		if len(path) > 3 && path[len(path) - 3] == ".py" {
+			pyFileLisOutput <- path
+		}
+	})
+	if err != nil {
+		log.Fatalf("Connot get py file. \nError: %v", err)
+	}
+}
+
 func ReadFile(pyFilePathLis chan string, pyCode chan string) {
+	defer wg.Done()
 	for _, pyFilePath := pyFilePath {
 		if pyFile, err := os.Open(pyFilePath, os.RDONLY, 0644); err == nil {
 			pyCode <- pyFile
 		} else {
-			ErrProcess("Cannot read file %s. \nError: %v", err, "error", []interface{pyFilePath})
+			if err != nil {
+				log.Fatalf("Cannot read file %s. \nError: %v", pyFilePath, err)
+			}
 		}
     }
 }
 
-func MatchLib(pyCode chan string, libLis chan []string, regex *regexp.Regexp) {
-	defer wg.Done()
-	for code := range pyCode {
-		libLis <- regex.FindAllString()
+func MatchLib(pyCodeLis chan string, libLis chan []string, regex *regexp.Regexp) {
+	defer wg.Done
+	for pyCode := range pyCodeLis {
+		libLis <- regex.FindAllString(pyCode)
 	}
 }
 
@@ -92,6 +110,9 @@ func InstallLib(libLis chan string) {
     defer wg.Done()
 	for libName := range libLis {
 		installCmd := exec.Command("pip", "install", libName)
-		installCmd.Run()
+		err := installCmd.Run()
+		if err != nil {
+			log.Fatal("Install %s failed. Error: %v", libName, err)
+		}
 	}
 }
